@@ -29,16 +29,34 @@ export default function Home() {
   const [myCourses, setMyCourses] = useState<Course[]|null>(null);
 
   const loadCourses = async () => {
-    const resp = await axios.get("");
+    setLoadingCourses(true);
+    const resp = await axios.get("/api/courses");
+    //console.log(resp.data.courses)
+    setCourses(resp.data.courses);
+
+    setLoadingCourses(false);
   };
 
   const loadMyCourses = async () => {
-    const resp = await axios.get("/api/enrollments");
+    const resp = await axios.get("/api/enrollments",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    //console.log(resp.data);
+    setMyCourses(resp.data.courses);
   };
 
   // load courses when app starts the first time
   useEffect(() => {
     loadCourses();
+
+    //read token and auten username from localstorage
+    const token = localStorage.getItem("token");
+    const authenUsername = localStorage.getItem("authenUsername");
+    if (token && authenUsername) {
+      setToken(token);
+      setAuthenUsername(authenUsername);
+    }
+
   }, []);
 
   // load my courses when the "token" is changed (logged in successfully)
@@ -51,10 +69,19 @@ export default function Home() {
 
   const login = async () => {
     try {
-      const resp = await axios.post("/api/user/login");
-
+      const resp = await axios.post("/api/user/login",{username,password});
+      
       // set token and authenUsername here
+      setToken(resp.data.token);
+      setAuthenUsername(resp.data.username);
+
       // clear login form
+      setUsername("");
+      setPassword("");
+
+      //save token  and authen username to local storage
+      localStorage.setItem("token", resp.data.token);
+      localStorage.setItem("authenUsername", resp.data.username);
 
     } catch (error) {
       if (error.response.data)
@@ -67,7 +94,13 @@ export default function Home() {
   };
 
   const logout = () => {
-    // set necessary state variables after logged out
+    // set necessary state variables after logged 
+    setAuthenUsername("");
+    setToken("");
+
+    //remove token and authenusername from localstorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("authenUsername");
   };
 
   return (
@@ -79,7 +112,7 @@ export default function Home() {
         {/* all courses section */}
         <Paper withBorder p="md">
           <Title order={4}>All courses</Title>
-          {/* <Loader variant="dots" /> */}
+          {loadingCourses && (<Loader type="dots" />) }
           {courses &&
             courses.map((course:Course) => (
               <Text key={course.courseNo}>
@@ -93,7 +126,8 @@ export default function Home() {
           <Title order={4}>Login</Title>
           
           {/* show login form if not logged in */}
-          <Group align="flex-end">
+          {!authenUsername && (
+            <Group align="flex-end">
             <TextInput
               label="Username"
               onChange={(e) => setUsername(e.target.value)}
@@ -105,24 +139,31 @@ export default function Home() {
               value={password}
             />
             <Button onClick={login}>Login</Button>
-          </Group>
+          </Group>)}
+          
 
           {/* show log out option if logged in successfully */}
-          {/* <Group>
+          {authenUsername&&(          
+            <Group>
             <Text fw="bold">Hi {authenUsername}!</Text>
             <Button color="red" onClick={logout}>
               Logout
             </Button>
-          </Group> */}
+          </Group> 
+        )}
+
           
         </Paper>
 
         {/* enrollment section */}
         <Paper withBorder p="md">
           <Title order={4}>My courses</Title>
-          <Text c="dimmed">Please login to see your course(s)</Text>
-
-          {myCourses &&
+          {!authenUsername&&(
+            <Text c="dimmed">Please login to see your course(s)</Text>
+            )}
+          
+         
+          {authenUsername&&myCourses &&
             myCourses.map((course) => (
               <Text key={course.courseNo}>
                 {course.courseNo} - {course.title}

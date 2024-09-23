@@ -5,7 +5,7 @@ import { Database } from "@lib/types";
 
 import jwt from "jsonwebtoken";
 
-
+//post htpp://localhost:3000/api/user/login
 export const POST = async (request:NextRequest) => {
   const body = await request.json();
   const { username, password } = body;

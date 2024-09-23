@@ -14,6 +14,7 @@ export function checkToken() {
   const secret = process.env.JWT_SECRET || "This is another secret";
 
   try {
+    //return Payload{username,role,studentId}
     return jwt.verify(token, secret);
   } catch {
     return null;

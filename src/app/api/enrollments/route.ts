@@ -4,6 +4,8 @@ import { Database, Payload } from "@lib/types";
 import { NextRequest, NextResponse } from "next/server";
 import sleep from "sleep-promise";
 
+
+//GET http://localhost:3000/api/enrollments
 export const GET = async () => {
   const payload = checkToken();
   if (!payload) {
@@ -49,7 +51,7 @@ export const GET = async () => {
     courses,
   });
 };
-
+//POST http://localhost:3000/api/enrollments
 export const POST = async (request:NextRequest) => {
   const payload = checkToken();
   if (!payload) {
